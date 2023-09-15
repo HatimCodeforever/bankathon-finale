@@ -1,17 +1,18 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import Home from './views/home.jsx';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import Home from './views/home';
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 
-
-ReactDOM.createRoot(document.getElementById('root')).render(
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
   <React.StrictMode>
-    <BrowserRouter>
+   <BrowserRouter>
     <Routes>
       <Route path="/home" element={<Home />} />
 
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   </BrowserRouter>
-  </React.StrictMode>,
-)
+  </React.StrictMode>
+);
