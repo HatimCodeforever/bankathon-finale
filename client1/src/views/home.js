@@ -166,8 +166,8 @@ export function Dashboard() {
             />
             <p className="mt-2 text-black font-semibold text-center">TARGET REPORT</p>
           </div>
+          <iframe title="bankathon" width="1140" height="541.25" src="https://app.powerbi.com/reportEmbed?reportId=ec41fde3-ea65-414f-96a4-a89000dcaa84&autoAuth=true&ctid=d1f14348-f1b5-4a09-ac99-7ebf213cbc81" frameborder="0" allowFullScreen="true"></iframe>
         </div>
-        <iframe title="Report Section" width="600" height="373.5" src="https://app.powerbi.com/view?r=eyJrIjoiZDY3OWY3NjMtZDMxNC00Y2IzLWE0YWYtNTQwNzAxMjQ5NGRmIiwidCI6ImQxZjE0MzQ4LWYxYjUtNGEwOS1hYzk5LTdlYmYyMTNjYmM4MSIsImMiOjEwfQ%3D%3D" frameborder="0" allowFullScreen="true"></iframe>
       </div>
     </div>
   );
