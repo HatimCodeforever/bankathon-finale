@@ -3,3 +3,8 @@ python-dotenv
 openai
 chainlit
 langchain
+tiktoken
+faiss-cpu
+unstructured
+pandas
+numpy
