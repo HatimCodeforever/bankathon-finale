@@ -15,7 +15,7 @@ function Sidebar() {
             </a>
           </li>
           <li className="py-2 transform transition-transform hover:scale-110">
-            <a href="#" className="text-white text-xl font-medium hover:text-white block text-center">
+            <a href="http://localhost:8000/" className="text-white text-xl font-medium hover:text-white block text-center">
               StatBot
             </a>
           </li>
