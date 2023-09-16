@@ -16,12 +16,7 @@ function Sidebar() {
           </li>
           <li className="py-2 transform transition-transform hover:scale-110">
             <a href="#" className="text-white text-xl font-medium hover:text-white block text-center">
-              About
-            </a>
-          </li>
-          <li className="py-2 transform transition-transform hover:scale-110">
-            <a href="#" className="text-white text-xl font-medium hover:text-white block text-center">
-              Services
+              StatBot
             </a>
           </li>
         </ul>
