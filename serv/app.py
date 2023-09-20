@@ -1,7 +1,5 @@
 from flask import Flask,jsonify,request
 from dotenv import load_dotenv
-from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS
 import sqlite3
 import csv
 
