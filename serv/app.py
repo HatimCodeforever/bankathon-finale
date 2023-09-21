@@ -2,8 +2,6 @@ from flask import Flask,jsonify,request
 from dotenv import load_dotenv
 import sqlite3
 import csv
-
-
 import os
 load_dotenv()
 
@@ -109,16 +107,16 @@ def get_employee_data():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
-
-# @app.route("/aws-request")
-# def runpodApi():
-    # ENDPOINT = os.getenv("AWS_ENDPOINT")
-    # runtime = boto3.client('runtime.sagemaker')
-    # response = runtime.invoke_endpoint(EndpointName = ENDPOINT, ContentType="applaction")
-    # input = "what is Python?"
-    # print("Response from runpod= ",response)
-    # return response
+@app.route('/answer', methods=['POST'])
+def answer_query():
+    try:
+        data = request.get_json()
+        user_query = data.get('query', '')
+        print("user Query:- ",user_query)
+        response_data = {'answer': "I am a chatbot so pls ask me somthing difficult!!"}
+        return jsonify(response_data)
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 
 if __name__ == "__main__":

@@ -11,6 +11,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+::-webkit-scrollbar {
+  width: 6px; /* Adjust the width as needed */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: transparent; /* Set the color to transparent */
+  border-radius: 3px;
+}
+
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;

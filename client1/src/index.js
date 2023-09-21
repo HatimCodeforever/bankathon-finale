@@ -3,8 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import Home from './views/home';
-import Chatui from './components/Csidebar';
-import ChatInterface from './components/ChatInterface';
+import Chatui from './views/chat';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
