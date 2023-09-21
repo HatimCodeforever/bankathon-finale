@@ -7,3 +7,5 @@ faiss-cpu
 unstructured
 pandas
 numpy
+langchain-experimental
+unstructured

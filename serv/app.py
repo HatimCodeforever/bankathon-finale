@@ -3,9 +3,19 @@ from dotenv import load_dotenv
 import sqlite3
 import csv
 import os
+from langchain.utilities import SQLDatabase
+from langchain.llms import OpenAI
+from langchain_experimental.sql import SQLDatabaseChain
+from langchain.agents import create_sql_agent
+from langchain.agents.agent_toolkits import SQLDatabaseToolkit
+# from langchain.agents import AgentExecutor
+from langchain.agents.agent_types import AgentType
+
 load_dotenv()
 
 app = Flask(__name__)
+
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 @app.route("/home2")
 def hello_world():
@@ -113,11 +123,25 @@ def answer_query():
         data = request.get_json()
         user_query = data.get('query', '')
         print("user Query:- ",user_query)
-        response_data = {'answer': "I am a chatbot so pls ask me somthing difficult!!"}
+        response = question_answering(user_query)
+        print(response)
+        response_data = {'answer': response}
         return jsonify(response_data)
     except Exception as e:
         return jsonify({'error': str(e)})
 
+def question_answering(user_query):
+    sqlite_db_path = "data_KRA.sqlite"
+    db = SQLDatabase.from_uri(f"sqlite:///{sqlite_db_path}")
+
+    agent_executor = create_sql_agent(
+        llm= OpenAI(temperature=0, openai_api_key= OPENAI_API_KEY),
+        toolkit= SQLDatabaseToolkit(db=db, llm=OpenAI(temperature=0, openai_api_key= OPENAI_API_KEY)),
+        verbose= True,
+        agent_type= AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    )
+
+    return agent_executor.run(user_query)
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
