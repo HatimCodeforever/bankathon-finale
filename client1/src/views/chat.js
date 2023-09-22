@@ -1,16 +1,14 @@
-import React, { useState } from "react";
-import Chart from "react-apexcharts";
+import React, { useState, useRef } from "react";
 import "../index.css";
-// import Sidebar from "../components/sidebar";
-import { Sidebar, Menu, MenuItem, SubMenu } from "react-pro-sidebar";
-// import { Sidebar } from "react-custom-sidebar";
-import { Link } from 'react-router-dom';
+import ChartComponent from '../components/chartComponent';
+import { FaHome, FaComments } from 'react-icons/fa';
+import { Sidebar } from "react-custom-sidebar";
 
 const themeColors = {
   light: {
-    bgColor: "#e4e4e6",
-    textColor: "#0f0f1f",
-    highlights: "#cfcfcf",
+    bgColor: "#9C254D",
+    textColor: "white",
+    highlights: "#D23369",
   },
   dark: {
     bgColor: "#0f0f1f",
@@ -21,8 +19,20 @@ const themeColors = {
 
 
 export function Chat() {
+  const chartData = {
+    categories: ['January', 'February', 'March', 'April', 'May'],
+    series: [
+      {
+        name: 'Sales',
+        data: [30, 40, 25, 50, 49],
+      },
+    ],
+  };
+
+  const chartType = 'line';
   const [userQuery, setUserQuery] = useState("");
-  const [responses, setResponses] = useState([]);
+  const [chatHistory, setChatHistory] = useState([]);
+
   // const examples = [
   //   "Who is the best Employee?",
   //   "How Many emplyee works under me?",
@@ -31,64 +41,30 @@ export function Chat() {
   // ]
 
   const [isMenuOpen, setIsMenuOpened] = useState(false);
-
+  const chatContainerRef = useRef(null);
   // menu list
   const menuItems = [
     {
       title: "Home",
-      link: "/",
-      // icon: <FontAwesomeIcon icon={faHome} />,
+      link: "/home",
+      icon: <FaHome />,
     },
     {
-      title: "Mails",
+      title: "Chatbot",
       link: "/mails",
-      // icon: <FontAwesomeIcon icon={faEnvelope} />,
-    },
-    {
-      title: "Services",
-      link: "/services",
-      // icon: <FontAwesomeIcon icon={faList} />,
-    },
-    {
-      title: "Contacts",
-      link: "/contacts",
-      // icon: <FontAwesomeIcon icon={faContactCard} />,
+      icon: <FaComments />,
     },
   ];
 
-  const handleLogout = () => {
-    console.log("logout clicked");
-  };
-
-
-  const chartData = [
-    {
-      name: "Series 1",
-      data: [30, 40, 35, 50, 49, 60, 70, 91, 125],
-    },
-  ];
-
-  const chartOptions = {
-    chart: {
-      id: "line-chart",
-    },
-    xaxis: {
-      categories: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-      ],
-    },
-  };
 
   const sendQueryToAPI = async () => {
     try {
+      // Add the user's query to chat history
+      setChatHistory((prevChatHistory) => [
+        ...prevChatHistory,
+        { userQuery, answer: "..." },
+      ]);
+      setUserQuery("");
       const response = await fetch("/answer", {
         method: "POST",
         headers: {
@@ -96,11 +72,18 @@ export function Chat() {
         },
         body: JSON.stringify({ query: userQuery }),
       });
-
+  
       if (response.ok) {
         const data = await response.json();
-        setResponses([...responses, { userQuery, answer: data.answer }]);
-        setUserQuery(""); // Clear user input
+  
+        // Update the chat history with the response
+        setChatHistory((prevChatHistory) => {
+          const updatedHistory = [...prevChatHistory];
+          updatedHistory[prevChatHistory.length - 1].answer = data.answer;
+          return updatedHistory;
+        });
+        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        // Clear user input
       } else {
         console.error("Failed to fetch data from API");
       }
@@ -108,66 +91,41 @@ export function Chat() {
       console.error("Error sending query to API:", error);
     }
   };
+  
+  
+
 
   return (
     <>
-      <div className="h-screen w-screen flex bg-[#050509]">
-      {/* <Sidebar
-          menuItems={menuItems}
-          theme="light"
-          logoUrl="add logo url here"
-          logoSmallUrl="add small logo url here which will be visible in closed state"
-          // themeColors={defaultThemeColors}
-          showLogout={true}
-          handleLogout={handleLogout}
-          userDetails={{
-            name: "User name",
-            description: "designation",
-            avatar: "add user avatart url here",
-          }}
-          closeOnLinkClick={false}
-          closeOnOutsideClick={false}
-          isSidebarOpened={isMenuOpen}
-          handleSidebarToggle={setIsMenuOpened}
-          showToggleButton={true}
-        >
-          // main content here
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="mails" element={<Mails />} />
-            <Route path="contacts" element={<Contacts />} />
-            <Route path="services" element={<Services />} />
-          </Routes>
-        </Sidebar> */}
-        <Sidebar backgroundColor="#d42765" width="18vw">
-          <Menu>
-            <MenuItem component={<Link to="/home" />}> Dashboard </MenuItem>
-            <MenuItem component={<Link to='/chat' />}> BuzzBot </MenuItem>
-            <MenuItem> Recommendations </MenuItem>
-          </Menu>
-        </Sidebar>
-        ;
-
-
-        <div className="w-[80%]">
+      <div className="h-screen w-screen flex bg-white">
+        <div className="w-[15%]">
+          <Sidebar
+            menuItems={menuItems}
+            theme="light"
+            themeColors={themeColors}
+            isSidebarOpened={isMenuOpen}
+            handleSidebarToggle={setIsMenuOpened}
+            showToggleButton={false}
+          >
+          </Sidebar>
+        </div>
+        <div className="w-[85%]">
           <div className="h-[80%] flex flex-col justify-center items-center text-white">
-            <div className="text-4xl font-bold mb-8">STAT GPT</div>
-            <div className="h-[100%] w-[80%] overflow-y-auto">
-              <div className="chat-container w-[100%]">
-                {responses.map((item, index) => (
+            <div className="text-4xl font-bold mb-8 mt-3 text-black">CHAT BOT</div>
+            <div className="h-[100%] w-[90%] overflow-y-auto">
+              <div className="chat-container w-[100%]" ref={chatContainerRef}>
+                {chatHistory.map((item, index) => (
                   <div key={index} className="mb-5">
-                    <div className="bg-blue-500 text-white ml-auto rounded-lg p-2 mr-5 max-w-[20%] mb-5">
-                      {item.userQuery}
+                    <div className="w-[80%] ml-56">
+                      <div className="bg-blue-500 text-white  ml-auto rounded-lg max-w-max p-3 mb-5">
+                        {item.userQuery}
+                      </div>
                     </div>
-                    <div className="bg-gray-300 text-black rounded-lg p-2 ml-5 max-w-max">
-                      {/* <Chart
-                        options={chartOptions}
-                        series={chartData}
-                        type="line"
-                        height={250}
-                        width={500}
-                      /> */}
-                      {item.answer}
+                    <div className="w-[80%]">
+                      <div className="bg-gray-300 text-black rounded-lg p-3  max-w-max">
+                        {item.answer}
+                        <ChartComponent chartType={chartType} chartData={chartData} />
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -184,11 +142,16 @@ export function Chat() {
           </div>
           <div className="h-[20%]">
             <div className="flex flex-col items-center justify-center w-full h-full text-white">
-              <div className="w-[60%] flex justify-center relative">
+              <div className="w-[75%] flex justify-center relative">
                 <input
                   type="text"
-                  className=" w-full rounded-lg p-4 pr-16 bg-slate-800 text-white"
+                  className=" w-full rounded-lg pr-14 pt-4 pl-4 pb-4 bg-slate-800 text-white"
                   value={userQuery}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      sendQueryToAPI();
+                    }
+                  }}
                   onChange={(e) => setUserQuery(e.target.value)}
                   placeholder="Type your message here..."
                 />
@@ -198,7 +161,7 @@ export function Chat() {
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="icon icon-tabler icon-tabler-send"
+                    className="icon icon-tabler icon-tabler-send"
                     width="24"
                     height="24"
                     viewBox="0 0 24 24"

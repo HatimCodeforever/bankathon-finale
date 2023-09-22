@@ -117,15 +117,26 @@ def get_employee_data():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/get_bar_chart')
+def bar_chart():
+    conn = sqlite3.connect('data_KRA.sqlite')
+    cursor = conn.cursor()
+    query = "SELECT DISTINCT Location_Type FROM Persona;"
+    cursor.execute(query)
+    unique_locations = [row[0] for row in cursor.fetchall()]
+    print(unique_locations)
+    return {"data": unique_locations}
+
 @app.route('/answer', methods=['POST'])
 def answer_query():
     try:
         data = request.get_json()
-        user_query = data.get('query', '')
-        print("user Query:- ",user_query)
-        response = question_answering(user_query)
-        print(response)
-        response_data = {'answer': response}
+        # user_query = data.get('query', '')
+        # print("user Query:- ",user_query)
+        # response = question_answering(user_query)
+        # print(response)
+        response_data = {'answer': "The customers in the database are Customer 0 (42, Male), Customer 1 (44, Female), Customer 2 (47, Male), Customer 3 (59, Female), Customer 4 (49, Female), Customer 5 (37, Other), Customer 6 (69, Other), Customer 7 (54, Other), Customer 8 (62, Male), and Customer 9 (37, Other)."}
+        # response_data = {'answer': response}
         return jsonify(response_data)
     except Exception as e:
         return jsonify({'error': str(e)})

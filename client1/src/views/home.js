@@ -1,8 +1,37 @@
 import React, { useState, useEffect } from "react";
 import Chart from "react-apexcharts";
-import Sidebar from "../components/sidebar";
+import { Sidebar } from "react-custom-sidebar";
+import { FaHome, FaComments } from 'react-icons/fa';
+
 
 export function Dashboard() {
+  const [isMenuOpen, setIsMenuOpened] = useState(false);
+  const themeColors = {
+    light: {
+      bgColor: "#9C254D",
+      textColor: "white",
+      highlights: "#D23369",
+    },
+    dark: {
+      bgColor: "#0f0f1f",
+      textColor: "#ffffff",
+      highlights: "#21213d",
+    },
+  };
+  // menu list
+  const menuItems = [
+    {
+      title: "Home",
+      link: "/home",
+      icon: <FaHome />,
+    },
+    {
+      title: "Chatbot",
+      link: "/chat",
+      icon: <FaComments />,
+    },
+  ];
+
   const [employeeData, setEmployeeData] = useState({
     empid: [],
     empname: []
@@ -13,10 +42,9 @@ export function Dashboard() {
       labels: ['Category A', 'Category B', 'Category C', 'Category D', 'Category E'],
       datalabels: {
         enabled: true,
-        style: {
-          fontSize: '20px',
-          padding: '4px',
-        }
+      },
+      legend: {
+        show: false, // Hide the legend
       },
     },
     series: [44, 55, 13, 43, 22],
@@ -28,6 +56,18 @@ export function Dashboard() {
     },
     xaxis: {
       categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "November"],
+      labels: {
+        style: {
+          colors: "white",
+        },
+      },
+    },
+    yaxis: {
+      labels: {
+        style: {
+          colors: "white", // Set the text color for Y-axis labels
+        },
+      },
     },
     series: [
       {
@@ -37,11 +77,28 @@ export function Dashboard() {
     ],
   })
 
+  const [chartData3, setChartData3] = useState({
+    options: {
+      chart: {
+        id: 'bar-chart',
+      },
+      xaxis: {
+        categories: ['Category 1', 'Category 2', 'Category 3', 'Category 4', 'Category 5'],
+      },
+    },
+    series: [
+      {
+        name: 'Series 1',
+        data: [44, 55, 13, 43, 22],
+      },
+    ],
+  })
+
   const [selectedEmployee, setSelectedEmployee] = useState(1);
 
   useEffect(() => {
     if (selectedEmployee !== null) {
-      console.log("Selectedid:- ",selectedid)
+      console.log("Selectedid:- ", selectedid)
       fetch("/get_employee_data", {
         method: 'POST',
         headers: {
@@ -56,8 +113,21 @@ export function Dashboard() {
             chart: {
               id: "line-chart",
             },
+            title: {
+              text: "TARGET REPORT",
+              align: "center",
+              style: {
+                fontSize: "18px",
+                color: "black",
+              },
+            },
             xaxis: {
               categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "November"],
+            }, legend: {
+              show: true,
+              labels: {
+                colors: 'white',
+              }
             },
             series: [
               {
@@ -121,20 +191,33 @@ export function Dashboard() {
   const chartStyle = {
     width: "100%", // Set the width of the chart container
     height: "330px", // Set the height of the chart container
+    backgroundColor: "#9C254D",
   };
 
   return (
-    <div className="bg-white">
-      <Sidebar />
-      <div className="z-0 mt-5 ml-64">
-        <div className="mb-4">
-          <label htmlFor="employeeSelect" className="mr-2">
-            Select Employee:
+    <div className="h-screen w-screen flex bg-white">
+      <div className="w-[15%]">
+        <Sidebar
+          menuItems={menuItems}
+          theme="light"
+          themeColors={themeColors}
+          isSidebarOpened={isMenuOpen}
+          handleSidebarToggle={setIsMenuOpened}
+          showToggleButton={false}
+        >
+        </Sidebar>
+      </div>
+      <div className="w-[75%] ml-16 mt-3" >
+        <div className="mb-4 " >
+          <label htmlFor="employeeSelect" className="mr-2 text-lg">
+            <b>Select Employee:</b>
           </label>
           <select
             id="employeeSelect"
+            className="text-white p-2"
             onChange={handleEmployeeChange}
             value={selectedEmployee}
+            style={{background: "#9C254D"}}
           >
             <option value="">Select an Employee</option>
             {employeeData.empid.map((empid, index) => (
@@ -144,9 +227,8 @@ export function Dashboard() {
             ))}
           </select>
         </div>
-        <div className="mb-12 grid-rows-1 grid gap-y-5 gap-x-4 md:grid-cols-2 xl:grid-cols-2 ">
-
-          <div className="bg-gray-200 p-4 rounded-lg" style={chartStyle}>
+        <div className="mb-5 grid-rows-1 grid gap-y-5 gap-x-4 md:grid-cols-2 xl:grid-cols-2 ">
+          <div className="bg-gray-200 p-1 rounded-lg" style={chartStyle}>
             <Chart
               options={chartData1.options}
               series={chartData1.series}
@@ -154,20 +236,29 @@ export function Dashboard() {
               width="100%"
               height="80%"
             />
-            <p className="mt-2 text-black font-semibold text-center">Analytics of the Products provided By our Bank</p>
+            <p className="mt-2 text-black text-xl font-semibold text-center">Analytics of the Products provided By our Bank</p>
           </div>
-          <div className="bg-gray-200 p-4 rounded-lg" style={chartStyle}>
+          <div className="bg-gray-200 p-1 rounded-lg" style={chartStyle}>
             <Chart
-              options={chartData2}
-              series={chartData2.series}
-              type="line"
-              width="100%" // Set the width of the chart itself
-              height="80%" // Set the height of the chart itself
+              options={chartData3}
+              series={chartData3.series}
+              type="bar"
+              width="100%"
+              height="80%"
             />
-            <p className="mt-2 text-black font-semibold text-center">TARGET REPORT</p>
+            <p className="mt-2 text-xl text-black font-semibold text-center">RANDOM CHART</p>
           </div>
-          <iframe title="bankathon" width="1140" height="541.25" src="https://app.powerbi.com/reportEmbed?reportId=ec41fde3-ea65-414f-96a4-a89000dcaa84&autoAuth=true&ctid=d1f14348-f1b5-4a09-ac99-7ebf213cbc81" frameborder="0" allowFullScreen="true"></iframe>
         </div>
+        <div className="p-3 rounded-lg" style={{ height: "290px", backgroundColor: "#9C254D" }}>
+          <Chart
+            options={chartData2}
+            series={chartData2.series}
+            type="line"
+            width="100%"
+            height="100%"
+          />
+        </div>
+
       </div>
     </div>
   );

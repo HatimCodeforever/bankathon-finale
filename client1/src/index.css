@@ -29,3 +29,8 @@ code {
 .hide-scroll-bar::-webkit-scrollbar{
   display: none;
 }
+
+.chat-container {
+  height: 100%;
+  overflow-y: auto;
+}
