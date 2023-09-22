@@ -111,7 +111,7 @@ export function Chat() {
         </div>
         <div className="w-[85%]">
           <div className="h-[80%] flex flex-col justify-center items-center text-white">
-            <div className="text-4xl font-bold mb-8 mt-3 text-black">CHAT BOT</div>
+            <div className="text-4xl font-bold mb-8 mt-3 text-black">SQL QUERY GENERATOR</div>
             <div className="h-[100%] w-[90%] overflow-y-auto">
               <div className="chat-container w-[100%]" ref={chatContainerRef}>
                 {chatHistory.map((item, index) => (

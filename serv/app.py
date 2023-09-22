@@ -8,8 +8,14 @@ from langchain.llms import OpenAI
 from langchain_experimental.sql import SQLDatabaseChain
 from langchain.agents import create_sql_agent
 from langchain.agents.agent_toolkits import SQLDatabaseToolkit
-# from langchain.agents import AgentExecutor
 from langchain.agents.agent_types import AgentType
+from langchain.chat_models import ChatOpenAI
+from langchain.chains import create_sql_query_chain
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.schema import Document
+from langchain.agents.agent_toolkits import create_retriever_tool
+
 
 load_dotenv()
 
@@ -41,7 +47,7 @@ def chartdata():
 
 @app.route("/dashh",methods=['GET'])
 def dash():
-    conn = sqlite3.connect('data_KRA.sqlite')  # Replace 'your_database.db' with your database file name
+    conn = sqlite3.connect('data_KRA.sqlite')
     cursor = conn.cursor()
     cursor.execute('SELECT Emp_ID FROM Employees')
     employee_ids = [row[0] for row in cursor.fetchall()]
@@ -131,28 +137,93 @@ def bar_chart():
 def answer_query():
     try:
         data = request.get_json()
-        # user_query = data.get('query', '')
-        # print("user Query:- ",user_query)
-        # response = question_answering(user_query)
-        # print(response)
-        response_data = {'answer': "The customers in the database are Customer 0 (42, Male), Customer 1 (44, Female), Customer 2 (47, Male), Customer 3 (59, Female), Customer 4 (49, Female), Customer 5 (37, Other), Customer 6 (69, Other), Customer 7 (54, Other), Customer 8 (62, Male), and Customer 9 (37, Other)."}
-        # response_data = {'answer': response}
+        user_query = data.get('query', '')
+        print("user Query:- ",user_query)
+
+        # response_data = {'answer': "The customers in the database are Customer 0 (42, Male), Customer 1 (44, Female), Customer 2 (47, Male), Customer 3 (59, Female), Customer 4 (49, Female), Customer 5 (37, Other), Customer 6 (69, Other), Customer 7 (54, Other), Customer 8 (62, Male), and Customer 9 (37, Other)."}
+
+        response = question_answering_intermediate(user_query)
+        print(response)
+        response_data = {'answer': response}
+
         return jsonify(response_data)
     except Exception as e:
         return jsonify({'error': str(e)})
 
-def question_answering(user_query):
+# BETTER NOT TO USE THIS
+# def sql_query_generator(user_query):
+#     sqlite_db_path = "data_KRA.sqlite"
+#     db = SQLDatabase.from_uri(f"sqlite:///{sqlite_db_path}")
+#     llm = ChatOpenAI(temperature=0)
+#     chain = create_sql_query_chain(llm = llm, db = db)
+#     response = chain.invoke({"question": user_query})
+#     return response
+
+def question_answering_basic(user_query):
     sqlite_db_path = "data_KRA.sqlite"
     db = SQLDatabase.from_uri(f"sqlite:///{sqlite_db_path}")
+    llm = OpenAI(temperature=0)
+    db_chain = SQLDatabaseChain.from_llm(
+        llm= llm,
+        db= db,
+        verbose = True,
+        use_query_checker = True
+    )
+    return db_chain.run(user_query)
+
+def question_answering_intermediate(user_query):
+    sqlite_db_path = "data_KRA.sqlite"
+    db = SQLDatabase.from_uri(f"sqlite:///{sqlite_db_path}")
+    llm = OpenAI(temperature=0)
 
     agent_executor = create_sql_agent(
-        llm= OpenAI(temperature=0, openai_api_key= OPENAI_API_KEY),
-        toolkit= SQLDatabaseToolkit(db=db, llm=OpenAI(temperature=0, openai_api_key= OPENAI_API_KEY)),
+        llm= llm,
+        toolkit= SQLDatabaseToolkit(db=db, llm=OpenAI(temperature=0)),
         verbose= True,
         agent_type= AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     )
-
     return agent_executor.run(user_query)
+
+def question_answering_advanced(user_query):
+    few_shots = {
+    'Who are the top k employees' : 'SELECT Employees.Name, RM_KRAs.Target_FY22_23_ABS, RM_KRAs.CURR_COMPLETION_ABS FROM Employees INNER JOIN RM_KRAs ON Employees.Emp_ID = RM_KRAs.Employee_ID ORDER BY RM_KRAs.Target_FY22_23_ABS DESC, RM_KRAs.CURR_COMPLETION_ABS DESC LIMIT k'
+    }
+    embeddings = OpenAIEmbeddings()
+    few_shot_docs = [Document(page_content=question, metadata={'sql_query': few_shots[question]}) for question in few_shots.keys()]
+    vector_db = FAISS.from_documents(few_shot_docs, embeddings)
+    retriever = vector_db.as_retriever()
+
+    # Creating custom tool for the agent
+    tool_description = """This tool will help you understand similar examples to adapt them to the user question. Input to this tool should be the user question."""
+
+    retriever_tool = create_retriever_tool(
+        retriever,
+        name='sql_get_similar_examples',
+        description=tool_description
+    )
+    custom_tool_list = [retriever_tool]
+
+    sqlite_db_path = "data_KRA.sqlite"
+    db = SQLDatabase.from_uri(f"sqlite:///{sqlite_db_path}")
+    llm = ChatOpenAI(temperature=0)
+
+    toolkit = SQLDatabaseToolkit(db=db, llm=llm)
+    custom_suffix = """
+        I should first get the similar examples I know.
+        I should first use the sql query provided in the example I know.
+        If the answer is not correct, I can then look at the tables in the database to see what I can query.
+        Then I should query the schema of the most relevant tables
+"""
+    agent = create_sql_agent(
+        llm=llm,
+        toolkit=toolkit,
+        verbose=True,
+        agent_type= AgentType.OPENAI_FUNCTIONS,
+        extra_tools= custom_tool_list,
+        suffix= custom_suffix
+    )
+    return agent.run(user_query)
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
